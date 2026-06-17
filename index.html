@@ -1,49 +1,112 @@
 <!DOCTYPE html>
 <html lang="id">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Lili</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            background: #0f172a;
-            color: white;
-            text-align: center;
-            padding-top: 100px;
-        }
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Kasir HASMIATI</title>
+<link rel="manifest" href="manifest.json">
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+</head><link rel="stylesheet" href="style.css">
 
-        h1 {
-            color: #38bdf8;
-        }
+<body class="bg-light">
+<div class="container py-4">
+  <div class="header-banner">
+  <img src="banner.png" alt="Minuman Segar">
+</div>
 
-        p {
-            font-size: 18px;
-        }
+  <h2 class="text-center mb-4">🧋 Kasir <strong>HASMIATI</strong></h2>
+  <div class="mb-2 text-end" id="datetime"></div>
 
-        button {
-            background: #38bdf8;
-            border: none;
-            padding: 12px 24px;
-            border-radius: 8px;
-            color: white;
-            cursor: pointer;
-        }
+  <div class="table-responsive mb-3">
+    <table class="table table-bordered align-middle" id="tabel">
+      <thead class="table-secondary">
+        <tr>
+          <th>Nama Minuman</th><th>Harga</th><th>Terjual</th><th>Stok Sisa</th><th>Total</th>
+        </tr>
+      </thead>
+      <tbody></tbody>
+    </table>
+  </div>
 
-        button:hover {
-            background: #0284c7;
-        }
-    </style>
-</head>
-<body>
+  <div class="mb-2"><strong id="total">Total Pendapatan: Rp 0</strong></div>
+  <div><strong>Laporan Harian: </strong><span id="laporan">Rp 0</span></div>
+</div>
 
-    <h1>Selamat Datang di Website Lili</h1>
+<script>
+let items = JSON.parse(localStorage.getItem('items') || '[]');
 
-    <p>Website ini dibuat menggunakan HTML dan di-host melalui Vercel.</p>
+if(items.length === 0){
+  items = [
+    { nama: 'Pop Ice', harga: 5000, jumlah: 0, sisaStok: 10, total: 0 },
+    { nama: 'Marimas', harga: 3000, jumlah: 0, sisaStok: 10, total: 0 },
+    { nama: 'Es Teh', harga: 2000, jumlah: 0, sisaStok: 15, total: 0 },
+    { nama: 'Kopi Susu', harga: 7000, jumlah: 0, sisaStok: 10, total: 0 }
+  ];
+  simpan();
+}
 
-    <button onclick="alert('Halo dari Lili!')">
-        Klik Saya
-    </button>
+updateTable();
+updateTotal();
+updateLaporan();
 
+function pesanItem(i){
+  const item = items[i];
+  const pesanan = parseInt(prompt(`Berapa pesanan untuk ${item.nama}?`));
+  if(isNaN(pesanan) || pesanan<=0){ alert('Jumlah tidak valid'); return; }
+  if(item.sisaStok < pesanan){ alert('Stok tidak cukup!'); return; }
+
+  const bayar = parseFloat(prompt(`Total harga: Rp${item.harga*pesanan}\nUang yang dibayar?`));
+  if(isNaN(bayar)){ alert('Pembayaran tidak valid'); return; }
+
+  const totalPesanan = item.harga * pesanan;
+  const kembalian = bayar - totalPesanan;
+  if(kembalian<0){ alert('Uang kurang!'); return; }
+
+  item.jumlah += pesanan;
+  item.sisaStok -= pesanan;
+  item.total = item.harga * item.jumlah;
+  simpan(); updateTable(); updateTotal(); updateLaporan();
+  alert(`Kembalian: Rp${kembalian}`);
+}
+
+function updateTable(){
+  const tbody = document.querySelector('#tabel tbody');
+  tbody.innerHTML='';
+  items.forEach((item,i)=>{
+    tbody.innerHTML += `<tr>
+      <td><button class='btn btn-link p-0' onclick='pesanItem(${i})'>${item.nama}</button></td>
+      <td>Rp${item.harga}</td>
+      <td>${item.jumlah}</td>
+      <td>${item.sisaStok}</td>
+      <td>Rp${item.total}</td>
+    </tr>`;
+  });
+}
+
+function updateTotal(){
+  const total = items.reduce((a,b)=>a+b.total,0);
+  document.getElementById('total').innerText='Total Pendapatan: Rp '+total;
+}
+
+function updateLaporan(){
+  const total=items.reduce((a,b)=>a+b.total,0);
+  document.getElementById('laporan').innerText='Rp '+total;
+}
+
+function simpan(){
+  localStorage.setItem('items', JSON.stringify(items));
+}
+
+setInterval(()=>{
+  const now=new Date();
+  document.getElementById('datetime').innerText=now.toLocaleString('id-ID');
+},1000);
+
+// Register service worker
+if('serviceWorker' in navigator){
+  navigator.serviceWorker.register('service-worker.js').then(()=>console.log('Service Worker Registered'));
+}
+</script>
 </body>
 </html>
